@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Choice & Shot</title>
+  <script>
+    var img = new Array();
+  </script>
+</head>
+
+<body onload="title();">
+  <!--
+<div class="elm">
+-->
+  <canvas id="cv3" width="800" height="600" ></canvas>
+  <audio id="spawn" preload="auto">
+        <source src="snd/bell00.wav" type="audio/wav">
+        <p>※お使いのブラウザは、残念ながらHTML5のaudio要素をサポートしていないようですから、音は鳴りません。</p>
+    </audio>
+  <!--
+</div>
+-->
+<!--
+  <style>
+  .elm {
+    cursor: none;
+  }
+  </style>
+-->
+  <script>
+  var img = new Array();
+  img[1] = new Image();
+  img[1].src = "pic/player.png";
+  img[100] = new Image(); //画像オブジェクト作成
+  img[100].src = "pic/box.png"; //写真のパスを指定する
+  img[101] = new Image();
+  img[101].src = "pic/p_bullet_2.png";
+  img[200] = new Image();
+  img[200].src = "pic/e_bullet.png";
+  img[201] = new Image();
+  img[201].src = "pic/e_bullet_2.png";
+  img[301] = new Image();
+  img[301].src = "pic/enemy_1.png";
+  img[302] = new Image();
+  img[302].src = "pic/enemy_2.png";
+  document.onkeydown = keyboard_down;
+  document.onkeyup = keyboard_up;
+  document.onmousedown = click_down;
+  document.onmouseup = click_up;
+  var $id = function(id){ return document.getElementById(id); };
+    var keyboard=new Array(301);
+    let move = 0;
+    var player={x:100,y:100,dx:0,dy:0,speed:7,reload:0,hp:500,maxhp:500,attack:1,weapon:1,size:40};
+        enemy={x:100,y:100,angle:0,speed:3,reload:6000,charge:0,hp:200,maxhp:200,attack:1,type:0,weapon:1,size:50,t_charge:0,score:0};
+        mouse={x:0,y:0};
+        p_bullet={x:0,y:0,angle:0,size:0,state:1,time:100,speed:5,chase:0,blast:0,snipe:0,damage:100}
+        e_bullet={x:0,y:0,angle:0,size:0,state:1,time:100,speed:5,chase:0,blast:0,snipe:0,damage:100}
+        field={width:800,height:600,wall:20}
+        order={pos:0,x:0,y:0,max_pre_time:1000,pre_time:1000,mov_speed:0,max_time:30000,time:30000,type:1,progress:0,max_progress:10,state:1,kind:1,success:1,text:"進捗を産め！"}
+        const DISP_X = 800,
+              DISP_Y = 540;
+        camera={x:0,y:0}
+        p_bullet_list = new Array();
+        e_bullet_list = new Array();
+        enemy_list = new Array();
+        gaming=-1;
+        primary=99;
+        secondary=98;
+        time_count=0;
+        game_speed=100;
+        order_list = new Array();
+        under_list = [0,1,2,3,4,5,6,7,8,9];
+        score=0;
+        flag=0;
+
+
+
+    function title() {
+
+      var ctx = document.getElementById("cv3").getContext("2d");
+      ctx.fillStyle = "rgba(200,200,200,1)";
+      ctx.fillRect(0, 0, 800, 600)
+      opening()
+    }
+
+/////////////////////////////////////////main
+  function opening(){
+    var ctx = document.getElementById("cv3").getContext("2d");
+    ctx.fillStyle = "rgba(50,50,50,1)";
+    ctx.fillRect(0, 0, 800, 600)
+
+    ctx.font = "60px メイリオ";
+    ctx.fillStyle = "rgba(250,250,250,1)";
+    ctx.fillText("1つ目の武器を選んでね", 80, 80, 700);
+    for (var i = 1; i <= 5; i++) {
+      ctx.fillRect(-150+160*i, 200, 140, 100)
+    }
+    ctx.font = "30px メイリオ";
+    ctx.fillStyle = "rgba(0,0,0,1)";
+    ctx.fillText("PROTO", 20+160*0, 240, 700);
+    ctx.fillText("WIDE", 20+160*1, 240, 700);
+    ctx.fillText("CHASE", 20+160*2, 240, 700);
+    ctx.fillText("BLAST", 20+160*3, 240, 700);
+    ctx.fillText("SNIPE", 20+160*4, 240, 700);
+    ctx.fillText("通常", 80+160*0, 380, 700);
+    ctx.fillText("拡散", 80+160*1, 380, 700);
+    ctx.fillText("追尾", 80+160*2, 380, 700);
+    ctx.fillText("炸裂", 80+160*3, 380, 700);
+    ctx.fillText("狙撃", 80+160*4, 380, 700);
+    for (var i = 1; i <= 5; i++) {
+      if (mouse.x>-150+160*i&&mouse.x<-10+160*i&&mouse.y>200&&mouse.y<400&&keyboard[300]==1) {
+        primary=i
+        player.weapon=primary
+        break;
+      }
+    }
+    ///
+    if (primary<=5&&gaming==-1) {
+      opening_2()
+    }else{
+      timer_op=setTimeout('opening()', 20)
+    }
+
+  }
+
+  function opening_2(){
+    if (gaming==-1) {
+      gaming=0
+      clearTimeout(timer_op);
+    }
+
+    var ctx = document.getElementById("cv3").getContext("2d");
+    ctx.fillStyle = "rgba(50,50,50,1)";
+    ctx.fillRect(0, 0, 800, 600)
+
+    ctx.font = "60px メイリオ";
+    ctx.fillStyle = "rgba(250,250,250,1)";
+    ctx.fillText("2つ目の武器を選んでね", 80, 80, 700);
+    for (var i = 1; i <= 5; i++) {
+      ctx.fillRect(-150+160*i, 200, 140, 200)
+    }
+    ctx.font = "30px メイリオ";
+    ctx.fillStyle = "rgba(0,0,0,1)";
+    ctx.fillText("PROTO", 20+160*0, 240, 700);
+    ctx.fillText("WIDE", 20+160*1, 240, 700);
+    ctx.fillText("CHASE", 20+160*2, 240, 700);
+    ctx.fillText("BLAST", 20+160*3, 240, 700);
+    ctx.fillText("SNIPE", 20+160*4, 240, 700);
+    ctx.fillText("通常", 80+160*0, 380, 700);
+    ctx.fillText("拡散", 80+160*1, 380, 700);
+    ctx.fillText("追尾", 80+160*2, 380, 700);
+    ctx.fillText("炸裂", 80+160*3, 380, 700);
+    ctx.fillText("狙撃", 80+160*4, 380, 700);
+    ctx.fillStyle = "rgba(250,100,100,1)";
+    ctx.fillText("選択済", -160+35+160*primary, 305, 700);
+    for (var i = 1; i <= 5; i++) {
+      if (mouse.x>-150+160*i&&mouse.x<-10+160*i&&mouse.y>200&&mouse.y<400&&keyboard[300]==1) {
+        if (i!=primary) {
+          secondary=i
+          break;
+        }
+      }
+    }
+    if (secondary<=5&&gaming==0) {
+      main()
+    }else{
+      timer_op_2=setTimeout('opening_2()', 20)
+    }
+  }
+
+
+
+    function main() {
+      if (gaming==0) {
+        clearTimeout(timer_op_2);
+        gaming=1
+      }
+      order_check()
+      if (keyboard[65]==1) {
+          var unused;
+          if (under_list.length>=1) {
+            unused=Math.floor(Math.random() *under_list.length)
+            new_order(unused)
+          }
+      }
+      move_check()
+      draw()
+
+      time_count++
+
+      if (time_count>=3000){
+        end()
+      }else{
+        timer_main=setTimeout('main()', 20)
+      }
+    }
+
+
+//////////////////////////////////////////////mainend
+    function new_order(num) {
+            var new_num
+            console.log(num)
+            console.log(under_list)
+            ring()
+            new_num=under_list[num]
+            console.log(new_num)
+            under_list.splice(num,1);
+            push_order({pos:new_num,x:-80,y:(new_num%5)*110+10,max_pre_time:4000,pre_time:0,mov_speed:0,max_time:20000,time:20000,type:1,progress:0,max_progress:10,state:1,kind:1,success:0,text:"進捗を産め！"})
+    }
+
+    function push_order(ord) {
+      order_list.push(ord)
+    }
+
+
+    function move_check() {
+      for (var i = 0; i < order_list.length; i++) {
+        if (order_list[i].state==1) {
+            easing_new(order_list[i],-350+Math.floor(order_list[i].pos/5)*1100,-80+Math.floor(order_list[i].pos/5)*560)
+            order_list[i].pre_time+=game_speed
+            if (order_list[i].pre_time>=order_list[i].max_pre_time) {
+              order_list[i].pre_time=0
+              order_list[i].x=-80+Math.floor(order_list[i].pos/5)*560
+              order_list[i].state=2
+            }
+        }
+        if (order_list[i].state==2) {
+          if (keyboard[66]==1) {
+            order_list[i].state=3
+            order_list[i].success=1
+          }
+        }
+        if (order_list[i].state==3) {
+          easing_out(order_list[i],-80+Math.floor(order_list[i].pos/5)*560,-350+Math.floor(order_list[i].pos/5)*1100)
+          order_list[i].pre_time+=(game_speed*2)
+          if (order_list[i].pre_time>=order_list[i].max_pre_time) {
+            order_list[i].x=-350
+            order_list[i].state=4
+          }
+        }
+      }
+    }
+//-350~-80
+    function easing_new(ord,start,goal) {
+      ord.x=goal+Math.cos((ord.pre_time/ord.max_pre_time)*Math.PI*4)*((ord.max_pre_time-ord.pre_time)*(ord.max_pre_time-ord.pre_time))/(ord.max_pre_time*ord.max_pre_time)*(start-goal)
+    }
+
+    function easing_out(ord,start,goal) {
+      ord.x=goal+Math.cos((ord.pre_time/ord.max_pre_time)*Math.PI*2)*((ord.max_pre_time-ord.pre_time)*(ord.max_pre_time-ord.pre_time))/(ord.max_pre_time*ord.max_pre_time)*(start-goal)
+    }
+
+    function order_check() {
+      for (var i = 0; i < order_list.length; i++) {
+        if (order_list[i].state==2) {
+          order_list[i].time-=game_speed
+          if (order_list[i].time<=0) {
+            order_list[i].state=3
+            order_list[i].success=0
+          }
+        }
+        if (order_list[i].state==4) {
+          flag=1
+          under_list.push(order_list[i].pos)
+          order_list.splice(i,1);
+        }
+      }
+    }
+
+
+    function end(){
+      if (gaming==1) {
+        gaming=2
+        clearTimeout(timer_main);
+      }
+      var ctx = document.getElementById("cv3").getContext("2d");
+      ctx.fillStyle = "rgba(250,250,250,1)";
+      ctx.fillRect(0, 0, 800, 600)
+
+      ctx.font = "60px メイリオ";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+      ctx.fillText("あなたのスコアは", 160, 80, 700);
+      ctx.fillText("tキーでツイート", 160, 480, 700);
+            ctx.font = "80px メイリオ";
+      ctx.fillText(Math.floor(score), 180, 300, 700);
+      if (keyboard[84]==1) {
+        tweet()
+      }else{
+        setTimeout('end()', 20)
+      }
+    }
+
+    function tweet() {
+      location.href = "https://twitter.com/intent/tweet?text=ChoiceAndShotで" + Math.floor(score) + "点獲得！ http://shot.dermas.trap.show/&hashtags=ChoiceAndShot"
+    }
+
+    function player_moves(){
+      player.dx=0;
+      player.dy=0
+      if (keyboard[65]==1) {
+        player.dx--;
+      }
+      if (keyboard[68]==1) {
+        player.dx++;
+      }
+      if (keyboard[87]==1) {
+        player.dy--;
+      }
+      if (keyboard[83]==1) {
+        player.dy++;
+      }
+      if (!(player.dx==0&&player.dy==0)) {
+        player.x+=player.dx*player.speed/Math.sqrt(player.dx**2+player.dy**2)
+        player.y+=player.dy*player.speed/Math.sqrt(player.dx**2+player.dy**2)
+      }
+      if (player.x-player.size/2<0+field.wall) {
+        player.x=0+field.wall+player.size/2
+      }else if (player.x+player.size/2>field.width-field.wall) {
+        player.x=field.width-field.wall-player.size/2
+      }
+      if (player.y-player.size/2<0+field.wall) {
+        player.y=0+field.wall+player.size/2
+      }else if (player.y+player.size/2>field.height-field.wall) {
+        player.y=field.height-field.wall-player.size/2
+      }
+    }
+
+
+
+
+
+    function draw(){
+      var ctx = document.getElementById("cv3").getContext("2d");
+      ctx.fillStyle = "rgba(230,230,230,1)";
+      ctx.fillRect(0, 0, 800, 600)
+
+      ctx.font = "740px メイリオ";
+      ctx.fillStyle = "rgba(180,180,180,0.3)";
+      for (var i = 0; i < 2; i++) {
+        for (var j = 0; j < 2; j++) {
+          ctx.fillRect(field.wall-camera.x+(field.width-field.wall*2)*i/2,field.wall-camera.y+(field.height-field.wall*2)*j/2, (field.width-field.wall*2)/4, (field.height-field.wall*2)/4)
+          ctx.fillRect(field.wall-camera.x+(field.width-field.wall*2)*(i+1/2)/2,field.wall-camera.y+(field.height-field.wall*2)*(j+1/2)/2, (field.width-field.wall*2)/4, (field.height-field.wall*2)/4)
+        }
+      }
+    ctx.fillStyle = "rgba(0,0,0,1)";
+
+
+      ctx.font = "50px メイリオ";
+      if (order_list.length>0) {
+        ctx.fillText(order_list[0].x, 180, 585, 500);
+        ctx.fillText(order_list.length, 180, 485, 500);
+        ctx.fillText(under_list.length, 180, 385, 500);
+        ctx.fillText(flag, 180, 285, 500);
+        }
+
+
+      ctx.font = "50px メイリオ";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+      //ctx.fillText(player.hp, 440, 570, 500);
+      //ctx.fillText(player.maxhp, 540, 570, 500);
+      ctx.fillText(60-Math.floor(time_count/50), 380, 585, 500);
+      ctx.fillText(( '00000000' + Math.floor(score) ).slice( -8 ), 550, 585, 400);
+      //ctx.fillText(enemy_list.length, 540, 570, 500);
+////ここから今回
+      ctx.font = "20px メイリオ";
+      for (var i = 0; i < under_list.length; i++) {
+        ctx.fillStyle = "rgba(0,0,0,1)";
+        ctx.drawImage(img[100],-350, 10, 400,100);
+        ctx.drawImage(img[100],-350+Math.floor(under_list[i]/5)*1100, (under_list[i]%5)*110+10, 400,100);
+        }
+    for (var i = 0; i < order_list.length; i++) {
+      ctx.font = "20px メイリオ";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+      ctx.drawImage(img[100], order_list[i].x, order_list[i].y, 400,100);
+      ctx.fillText(order_list[i].text, order_list[i].x+8+100-(Math.floor(order_list[i].pos/5))*60, order_list[i].y+24, 500);
+      ctx.fillText("P", order_list[i].x+8+100-(Math.floor(order_list[i].pos/5))*60, order_list[i].y+68, 500);
+      ctx.fillText("T", order_list[i].x+8+100-(Math.floor(order_list[i].pos/5))*60, order_list[i].y+88, 500);
+      ctx.fillStyle = "rgba(79,195,247,1)";
+      ctx.fillRect( order_list[i].x+38+100-(Math.floor(order_list[i].pos/5))*60, order_list[i].y+54, order_list[i].progress, 12)
+      ctx.fillStyle = "rgba(240,98,146,1)";
+      ctx.fillRect( order_list[i].x+38+100-(Math.floor(order_list[i].pos/5))*60, order_list[i].y+74,(order_list[i].time/order_list[i].max_time)*200 , 12)
+      ctx.font = "50px メイリオ";
+      if (order_list[i].state==3) {
+        ctx.globalAlpha = 1.2-(order_list[i].pre_time/order_list[i].max_pre_time)
+        if (order_list[i].success==1) {
+          ctx.fillStyle = "rgba(79,195,247)";
+          ctx.fillText("GREAT!", 100+Math.floor(order_list[i].pos/5)*420, order_list[i].y+100-(order_list[i].pre_time/order_list[i].max_pre_time)*50, 500);
+        }else{
+          ctx.fillStyle = "rgba(240,98,146)";
+          ctx.fillText("MISS...", 100+Math.floor(order_list[i].pos/5)*420, order_list[i].y+50+(order_list[i].pre_time/order_list[i].max_pre_time)*50, 500);
+        }
+      }
+      ctx.globalAlpha = 1
+      }
+
+      ctx.fillStyle = "rgba(50,50,50,1)";
+      ctx.fillRect(0, 0, 20, 600)
+      ctx.fillRect(800, 0, -20, 600)
+
+    }
+
+
+
+
+
+
+    function distance(p1x,p1y,p2x,p2y){
+      return Math.sqrt((p1x-p2x)**2+(p1y-p2y)**2)
+    }
+
+    function delay(s) { // s秒後に解決するプロミスを返す関数
+      return new Promise(ok => setTimeout(ok, s))
+    }
+
+    function keyboard_down(event){
+      keyboard[event.keyCode]=1;
+      if (event.keyCode==16&&gaming==1) {
+        if (player.weapon==primary) {
+          player.weapon=secondary
+        }else{
+          player.weapon=primary
+        }
+      }
+    }
+    function keyboard_up(event){
+      keyboard[event.keyCode]=0;
+    }
+    function click_down(event){
+      keyboard[300]=1;
+    }
+    function click_up(event){
+      keyboard[300]=0;
+    }
+    function ring() {
+      document.getElementById("spawn").play();
+    }
+
+
+
+    (function() {
+      function MouseMove00Func(e) {
+        var rect	= e.target.getBoundingClientRect();
+        mouse.x = e.clientX- Math.floor(rect.left);
+        mouse.y = e.clientY- Math.floor(rect.top);
+      }
+      canvas = $id("cv3");
+ g = canvas.getContext("2d");
+      if (document.addEventListener) {
+        canvas.addEventListener("mousemove", MouseMove00Func);
+      } else if (document.attachEvent) {
+        canvas.attachEvent("onmousemove", MouseMove00Func);
+      }
+
+    })();
+  </script>
+  <div id="piyo">
+  </div>
+
+  <br>
+  <br>操作説明
+  <br>最初にマウスで好きな武器を2つ選んでね！
+  <br>WASDで移動、マウスカーソルで照準を合わせて撃つ、シフトキーで武器切り替え
+  <br>60秒以内に敵を倒しまくってスコアを稼ごう！
+  <br>HPが0になっても終わらないが、大きくスコアが減るので注意！
+  <br>
+  <br>武器紹介
+  <br>PROTO:普通の武器。標準的な性能。
+  <br>WADE:5方向に打ち出す。
+  <br>CHASE:敵を自動で追いかける。攻撃力は低め。
+  <br>BLAST:撃ってから少しすると爆発する。直撃させよう。
+  <br>SNIPE:リロードは遅いけどとっても強力。相手との距離が空くほど威力が上がっていく。
+</body>
+
+</html>
